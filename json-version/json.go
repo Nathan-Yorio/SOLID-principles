@@ -1,15 +1,15 @@
 package main
 
 import (
-	// "bufio"
+	// "bufio"   // Also not needed with the JSON version
 	"fmt"
 	"os"
 	"strconv"
-	// "strings"
+	// "strings" // Not needed with the JSON version
 	"encoding/json"
 )
 
-// TuringMachine represents a simple Turing machine.
+// Special struct just for holding TuringMachine state values
 type TuringMachine struct {
 	headPosition int
 	tape         []byte
@@ -17,24 +17,27 @@ type TuringMachine struct {
 	rules        [][]string
 }
 
-// NewTuringMachine initializes a new TuringMachine with the given file path.
+// Creates a new Turing Machine state instance with a given filePath
 func NewTuringMachine(filePath string) (*TuringMachine, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("error opening file: %v", err)
+		fmt.Println("os.Open: encountered error opening file:", filePath, err)
+		return nil, err
 	}
 	defer file.Close()
 
 	return parseTuringMachine(file)
 }
 
-// parseTuringMachine extracts necessary information from the file and returns a TuringMachine.
-// parseTuringMachineJSON extracts necessary information from the JSON file and returns a TuringMachine.
+// rewritten to accomodate parsing a JSON file instead of the original txt format
+// uses the encoding/json library instead of the strings library
 func parseTuringMachine(file *os.File) (*TuringMachine, error) {
 	var tm TuringMachine
 
 	decoder := json.NewDecoder(file)
 
+	// Struct the mirrors the format of the JSON version with the keys
+	// which the token values will map to 
 	var jsonStruct struct {
 		HeadStartPosition string `json:"head-start-position"`
 		Tape              string `json:"tape"`
@@ -44,7 +47,7 @@ func parseTuringMachine(file *os.File) (*TuringMachine, error) {
 			Write     string `json:"write"`
 			Move      string `json:"move"`
 			NextState string `json:"next-state"`
-		} `json:"rules"`
+		} `json:"rules"` //Top level
 	}
 
 	err := decoder.Decode(&jsonStruct)
@@ -52,7 +55,8 @@ func parseTuringMachine(file *os.File) (*TuringMachine, error) {
 		return nil, err
 	}
 
-	// Convert and assign values to TuringMachine struct
+	// First take in the first level of the structured JSON 
+	// since the text file based version essentially just has it on a single line
 	headPosition, err := strconv.Atoi(jsonStruct.HeadStartPosition)
 	if err != nil {
 		return nil, err

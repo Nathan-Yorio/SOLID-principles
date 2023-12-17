@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// TuringMachine represents a simple Turing machine.
+// Special struct just for holding TuringMachine state values
 type TuringMachine struct {
 	headPosition int
 	tape         []byte
@@ -16,11 +16,12 @@ type TuringMachine struct {
 	rules        [][]string
 }
 
-// NewTuringMachine initializes a new TuringMachine with the given file path.
+// Creates a new Turing Machine state instance with a given filePath
 func NewTuringMachine(filePath string) (*TuringMachine, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("error opening file: %v", err)
+		fmt.Println("os.Open: encountered error opening file:", filePath, err)
+		return nil, err
 	}
 	defer file.Close()
 
