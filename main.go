@@ -8,6 +8,81 @@ import (
 	"strings"
 )
 
+// TuringMachine represents a simple Turing machine.
+type TuringMachine struct {
+	headPosition int
+	tape         []byte
+	state        string
+	rules        [][]string
+}
+
+// NewTuringMachine initializes a new TuringMachine with the given file path.
+func NewTuringMachine(filePath string) (*TuringMachine, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("error opening file: %v", err)
+	}
+	defer file.Close()
+
+	return parseTuringMachine(file)
+}
+
+// parseTuringMachine extracts necessary information from the file and returns a TuringMachine.
+func parseTuringMachine(file *os.File) (*TuringMachine, error) {
+	scanner := bufio.NewScanner(file)
+
+	var tm TuringMachine
+
+	if scanner.Scan() {
+		headPosition, _ := strconv.Atoi(scanner.Text())
+		tm.headPosition = headPosition
+	}
+
+	if scanner.Scan() {
+		tm.tape = []byte(scanner.Text())
+	}
+
+	for scanner.Scan() {
+		readLine := scanner.Text()
+		if strings.TrimSpace(readLine) == "" {
+			continue
+		}
+		tokens := strings.Fields(readLine)
+		tm.rules = append(tm.rules, tokens)
+	}
+
+	return &tm, nil
+}
+
+// Run executes the Turing machine based on its current state and rules.
+func (tm *TuringMachine) Run() {
+
+	state := "0"
+	for {
+		for i := 0; i < len(tm.rules); i++ {
+			if tm.rules[i][0] == state && tm.rules[i][1][0] == tm.tape[tm.headPosition] {
+				tm.tape[tm.headPosition] = tm.rules[i][2][0]
+				if tm.rules[i][3][0] == 'L' {
+					tm.headPosition--
+				} else {
+					tm.headPosition++
+				}
+				state = tm.rules[i][4]
+
+				tm.printTape()
+			}
+		}
+	}
+}
+
+// printTape prints the current state of the tape.
+func (tm *TuringMachine) printTape() {
+	fmt.Println("")
+	for j := 0; j < len(tm.tape); j++ {
+		fmt.Print(string(tm.tape[j]))
+	}
+}
+
 func main() {
 	// Check for input args
 	if len(os.Args) == 1 {
@@ -16,63 +91,11 @@ func main() {
 		return
 	}
 
-	// Open File
-	file, err := os.Open(os.Args[1])
+	turingMachine, err := NewTuringMachine(os.Args[1])
 	if err != nil {
-		fmt.Println("Error opening file:", err)
+		fmt.Println("Error creating Turing machine:", err)
 		return
 	}
-	defer file.Close()
 
-	scanner := bufio.NewScanner(file)
-
-	var readLine string
-	var headPosition int
-	var tape []byte
-	state := "0"
-
-	if scanner.Scan() {
-		readLine = scanner.Text()
-		headPosition, _ = strconv.Atoi(readLine)
-	}
-
-	if scanner.Scan() {
-		readLine = scanner.Text()
-		tape = []byte(readLine)
-	}
-
-	ruleCount := 0
-	rules := make([][]string, 16)
-
-	for scanner.Scan() {
-		readLine = scanner.Text()
-		if strings.TrimSpace(readLine) == "" { //Check if we reached the end of the file
-			continue
-		}
-
-		tokens := strings.Fields(readLine)	 // Extract only the number parts, not the space in between
-		rules[ruleCount] = make([]string, 5) // Each "rule" is a 5 string long array
-		copy(rules[ruleCount], tokens)		 // Copy the 5 tokens on a line into the current 5 string array
-		ruleCount++							 // increase the number of rules
-	}
-
-	for {
-		for i := 0; i < ruleCount; i++ {
-			if rules[i][0] == state && rules[i][1][0] == tape[headPosition] {
-				tape[headPosition] = rules[i][2][0]
-				if rules[i][3][0] == 'L' {
-					headPosition--
-				} else {
-					headPosition++
-				}
-				state = rules[i][4]
-
-				fmt.Println("")
-				for j := 0; j < len(tape); j++ {
-					fmt.Print(string(tape[j]))
-				}
-			}
-		}
-	}
+	turingMachine.Run()
 }
-
