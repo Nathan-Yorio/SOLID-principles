@@ -9,11 +9,14 @@ import (
 )
 
 func main() {
+	// Check for input args
 	if len(os.Args) == 1 {
-		fmt.Println("No file given\n\n")
+		fmt.Println("Argument not provided as input")
+		fmt.Println("Ex. ./main some_file.txt")
 		return
 	}
 
+	// Open File
 	file, err := os.Open(os.Args[1])
 	if err != nil {
 		fmt.Println("Error opening file:", err)
@@ -39,18 +42,18 @@ func main() {
 	}
 
 	ruleCount := 0
-	rules := make([][]string, 100)
+	rules := make([][]string, 16)
 
 	for scanner.Scan() {
 		readLine = scanner.Text()
-		if strings.TrimSpace(readLine) == "" {
+		if strings.TrimSpace(readLine) == "" { //Check if we reached the end of the file
 			continue
 		}
 
-		tokens := strings.Fields(readLine)
-		rules[ruleCount] = make([]string, 5)
-		copy(rules[ruleCount], tokens)
-		ruleCount++
+		tokens := strings.Fields(readLine)	 // Extract only the number parts, not the space in between
+		rules[ruleCount] = make([]string, 5) // Each "rule" is a 5 string long array
+		copy(rules[ruleCount], tokens)		 // Copy the 5 tokens on a line into the current 5 string array
+		ruleCount++							 // increase the number of rules
 	}
 
 	for {
@@ -72,3 +75,4 @@ func main() {
 		}
 	}
 }
+
